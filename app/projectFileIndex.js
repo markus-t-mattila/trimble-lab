@@ -21,6 +21,9 @@ import {
 const WORKSPACE_EVENT_ACCESS_TOKEN = "extension.accessToken";
 const WORKSPACE_EVENT_EXTENSION_COMMAND = "extension.command";
 const IFC_FILE_DOWNLOADED_EVENT = "ifc-file-downloaded";
+const MAIN_MENU_COMMAND = "main_clicked";
+const MAIN_MENU_TITLE = "IFC Checker";
+const MAIN_MENU_ICON_URL = "https://www.tietomallintaja.fi/wp-content/uploads/2022/03/LOGO-Tekstilla-Musta-200-x-200.png";
 
 const CORE_API_BASE_URL_STATIC_CANDIDATES = [
   "https://app.connect.trimble.com/tc/api/2.0",
@@ -80,6 +83,7 @@ const ui = {
 
 const runtimeState = {
   workspaceApi: null,
+  hasRegisteredMainMenu: false,
   accessToken: null,
   accessTokenWaiters: new Set(),
   currentProjectId: "",
@@ -1263,9 +1267,54 @@ function handleWorkspaceEvent(eventName, eventArguments) {
     return;
   }
 
-  if (eventName === WORKSPACE_EVENT_EXTENSION_COMMAND && !runtimeState.isLoadingFiles) {
+  if (
+    eventName === WORKSPACE_EVENT_EXTENSION_COMMAND &&
+    (!eventArguments?.data || eventArguments.data === MAIN_MENU_COMMAND) &&
+    !runtimeState.isLoadingFiles
+  ) {
     void loadAndRenderProjectFiles();
   }
+}
+
+/*
+Purpose:
+Register one extension command into Trimble Connect UI so the app becomes
+selectable from the left-side navigation and command interactions can trigger
+refresh logic.
+
+Logic:
+The command is registered only once per runtime session. Some host variants
+may not expose `ui.setMenu`; in that case we skip registration gracefully so
+the rest of file loading and checker functionality still work.
+
+Parameters:
+workspaceApi (object) - connected Workspace API object
+
+Returns:
+Promise<void>
+
+Possible side effects:
+- Adds or updates extension menu item in Trimble Connect shell.
+*/
+async function registerMainMenuIfSupported(workspaceApi) {
+  if (runtimeState.hasRegisteredMainMenu) {
+    return;
+  }
+
+  const setMenuFunction =
+    workspaceApi?.ui && typeof workspaceApi.ui.setMenu === "function" ? workspaceApi.ui.setMenu.bind(workspaceApi.ui) : null;
+
+  if (!setMenuFunction) {
+    return;
+  }
+
+  await setMenuFunction({
+    title: MAIN_MENU_TITLE,
+    icon: MAIN_MENU_ICON_URL,
+    command: MAIN_MENU_COMMAND,
+  });
+
+  runtimeState.hasRegisteredMainMenu = true;
 }
 
 /*
@@ -4824,6 +4873,7 @@ async function loadAndRenderProjectFiles() {
   try {
     setStatus("Connecting to Trimble Connect workspace...", "info");
     const workspaceApi = await connectWorkspaceApi();
+    await registerMainMenuIfSupported(workspaceApi);
 
     const projectContext = await readCurrentProjectContext(workspaceApi);
     runtimeState.currentProjectId = projectContext.projectId;
