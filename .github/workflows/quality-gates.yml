@@ -1,0 +1,41 @@
+name: Quality Gates
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  verify:
+    name: Verify Tests And Rule Dataset Integrity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Print tool versions
+        run: |
+          node --version
+          npm --version
+          python3 --version
+
+      - name: Run Node.js test suite
+        run: npm run test:node
+
+      - name: Verify original rule parity
+        run: npm run verify:rules
+
+      - name: Verify extracted rule dataset is deterministic
+        run: npm run verify:dataset

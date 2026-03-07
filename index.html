@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trimble Extension - Talotekniikka IFC Checker</title>
+    <script src="https://components.connect.trimble.com/trimble-connect-workspace-api/index.js"></script>
+    <script src="./app/vendor/web-ifc/web-ifc-api-iife.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="page-header">
+        <h1 class="page-title">Talotekniikka IFC Checker</h1>
+        <p class="page-subtitle">Select IFC model from the current Trimble Connect project, run checks, and export results.</p>
+      </header>
+
+      <section class="status-panel" aria-label="Loading status">
+        <div id="status" class="status status-info" role="status" aria-live="polite">Initializing extension...</div>
+      </section>
+
+      <details id="file-browser-section" class="file-browser-section" open>
+        <summary class="file-browser-summary">Tiedostojen haku ja mallin valinta</summary>
+        <div class="file-browser-content">
+          <section class="project-panel" aria-label="Project details">
+            <div class="project-row">
+              <span class="project-label">Project name:</span>
+              <strong id="project-name">-</strong>
+            </div>
+            <div class="project-row">
+              <span class="project-label">Project ID:</span>
+              <strong id="project-id">-</strong>
+            </div>
+            <div class="project-row">
+              <span class="project-label">File count:</span>
+              <strong id="file-count">0</strong>
+            </div>
+            <button id="refresh-button" type="button" class="refresh-button">Refresh file list</button>
+          </section>
+
+          <section class="table-panel" aria-label="Project file names">
+            <table class="file-table">
+              <thead>
+                <tr>
+                  <th scope="col" class="select-column">Select</th>
+                  <th scope="col" class="index-column">#</th>
+                  <th scope="col">File name</th>
+                  <th scope="col">File ID</th>
+                  <th scope="col">Folder ID</th>
+                  <th scope="col">Version ID</th>
+                </tr>
+              </thead>
+              <tbody id="file-table-body"></tbody>
+            </table>
+          </section>
+
+          <section class="download-panel" aria-label="Selected IFC download">
+            <div id="selected-file-summary" class="selected-file-summary">No IFC file selected.</div>
+            <button id="download-selected-button" type="button" class="refresh-button" disabled>
+              Download selected IFC to memory
+            </button>
+          </section>
+        </div>
+      </details>
+
+      <section class="checker-panel" aria-label="Checker report">
+        <div class="checker-header-row">
+          <h2 class="checker-title">Check Report</h2>
+          <div class="checker-actions">
+            <button id="edit-check-settings-button" type="button" class="secondary-action-button" disabled>
+              Edit check settings
+            </button>
+            <button id="clear-model-button" type="button" class="secondary-action-button" disabled>
+              Clear loaded model
+            </button>
+            <button id="download-report-button" type="button" class="secondary-action-button" disabled>
+              Download report JSON
+            </button>
+            <button id="export-bcf-draft-button" type="button" class="secondary-action-button" disabled>
+              Create BCFs
+            </button>
+          </div>
+        </div>
+        <div id="report-summary" class="report-summary"></div>
+        <div id="report-list" class="report-list"></div>
+      </section>
+    </main>
+
+    <div id="check-selection-modal" class="check-selection-modal" hidden>
+      <div class="check-selection-dialog" role="dialog" aria-modal="true" aria-labelledby="check-selection-title" tabindex="-1">
+        <div class="check-selection-header">
+          <h3 id="check-selection-title" class="check-selection-title">Valitse tarkastukset</h3>
+          <button id="check-selection-close-button" type="button" class="secondary-action-button">Sulje</button>
+        </div>
+        <p class="check-selection-subtitle">
+          Valitse mitä tarkastuksia suoritetaan. Luokittelu noudattaa alkuperaista sovellusta.
+        </p>
+        <div class="check-selection-toolbar">
+          <button id="check-selection-enable-all-button" type="button" class="secondary-action-button">Valitse kaikki</button>
+          <button id="check-selection-disable-all-button" type="button" class="secondary-action-button">Poista kaikki</button>
+          <button id="check-selection-defaults-button" type="button" class="secondary-action-button">Palauta oletukset</button>
+        </div>
+        <div id="check-selection-content" class="check-selection-content"></div>
+        <div class="check-selection-footer">
+          <button id="check-selection-cancel-button" type="button" class="secondary-action-button">Peruuta</button>
+          <button id="check-selection-confirm-button" type="button" class="refresh-button">Suorita valituilla tarkastuksilla</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="bcf-create-modal" class="bcf-create-modal" hidden>
+      <div class="bcf-create-dialog" role="dialog" aria-modal="true" aria-labelledby="bcf-create-title" tabindex="-1">
+        <div class="bcf-create-header">
+          <h3 id="bcf-create-title" class="bcf-create-title">Create BCF topics</h3>
+          <button id="bcf-create-close-button" type="button" class="secondary-action-button">Close</button>
+        </div>
+        <p id="bcf-create-subtitle" class="bcf-create-subtitle"></p>
+        <div id="bcf-create-message" class="bcf-create-message" hidden></div>
+        <div id="bcf-create-content" class="bcf-create-content"></div>
+        <div class="bcf-create-footer">
+          <button id="bcf-create-cancel-button" type="button" class="secondary-action-button">Cancel</button>
+          <button id="bcf-create-confirm-button" type="button" class="refresh-button">Create topics</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="app/projectFileIndex.js"></script>
+  </body>
+</html>

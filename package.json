@@ -1,0 +1,15 @@
+{
+  "name": "trimble-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "test:node": "node --test",
+    "verify:rules": "python3 scripts/verify-original-rule-parity.py",
+    "verify:dataset": "python3 scripts/extract-original-rule-dataset.py && git diff --exit-code -- app/checker/rules/originalRuleDataset.json",
+    "verify:release": "node --test && python3 scripts/verify-original-rule-parity.py"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
